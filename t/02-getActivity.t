@@ -110,16 +110,21 @@ sub _unmock_modules : Test(teardown) {
 sub test_smoke : Test(2) {
     my $test = shift;
 
+    # Set Data::Dumper format for diag statements below.
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+
     # The following sample XML comes from the API docs.
     my $activity_xml = <<'END_OF_XML';
 <entry xmlns="http://www.w3.org/2005/Atom">
-  <id>http://api.constantcontact.com/ws/customers/joesflowers/activities/a07e1ffaxjyffmvqgiz</id>
+  <id>http://api.constantcontact.com/ws/customers/username/activities/activityname</id>
   <title type="text"></title>
   <updated>2008-04-29T19:36:10.948Z</updated>
 
   <content type="application/vnd.ctct+xml">
     <Activity xmlns="http://ws.constantcontact.com/ns/1.0/"
-      id="http://api.constantcontact.com/ws/customers/joesflowers/activities/a07e1ffaxjyffmvqgiz">
+      id="http://api.constantcontact.com/ws/customers/username/activities/activityname">
       <Type>ADD_CONTACT_DETAIL</Type>
       <Status>COMPLETE</Status>
       <Errors>
@@ -142,12 +147,12 @@ sub test_smoke : Test(2) {
     </Activity>
   </content>
   <source>
-    <id>http://api.constantcontact.com/ws/customers/joesflowers/activities</id>
+    <id>http://api.constantcontact.com/ws/customers/username/activities</id>
     <title type="text">Bulk Activity</title>
     <link href="" />
     <link href="" rel="self" />
     <author>
-      <name>joesflowers</name>
+      <name>username</name>
     </author>
     <updated>2008-04-29T19:45:24.131Z</updated>
   </source>
@@ -187,14 +192,11 @@ END_OF_XML
         all(
             isa('Email::ConstantContact::Activity'),
             noclass({
-                'InsertTime' => '2008-04-29T19:35:54.923Z',
-                'Error' => undef,
                 '_cc' => shallow($cc),
-                'id' => 'http://api.constantcontact.com/ws/customers/joesflowers/activities/a07e1ffaxjyffmvqgiz',
-                'TransactionCount' => '1',
-                'FileName' => undef,
-                'RunStartTime' => '2008-04-29T19:36:08.894Z',
+                'id' => 'http://api.constantcontact.com/ws/customers/username/activities/activityname',
                 'Type' => 'ADD_CONTACT_DETAIL',
+                'Status' => 'COMPLETE',
+                'Error' => undef,
                 'Errors' => [
                     {
                         'LineNumber' => '3',
@@ -207,8 +209,11 @@ END_OF_XML
                         'LineNumber' => '4'
                     }
                 ],
+                'FileName' => undef,
+                'TransactionCount' => '1',
+                'RunStartTime' => '2008-04-29T19:36:08.894Z',
                 'RunFinishTime' => '2008-04-29T19:36:10.948Z',
-                'Status' => 'COMPLETE'
+                'InsertTime' => '2008-04-29T19:35:54.923Z',
             }),
         ),
         "Email::ConstantContact::Activity object",

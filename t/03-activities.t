@@ -110,25 +110,30 @@ sub _unmock_modules : Test(teardown) {
 sub test_smoke : Test(2) {
     my $test = shift;
 
+    # Set Data::Dumper format for diag statements below.
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+
     # The following sample XML comes from the API docs.
     my $activity_xml = <<'END_OF_XML';
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <id>http://api.constantcontact.com/ws/customers/joesflowers/activities</id>
+  <id>http://api.constantcontact.com/ws/customers/username/activities</id>
   <title type="text">Bulk Activity</title>
   <link href="" />
   <link href="" rel="self" />
   <author>
-    <name>joesflowers</name>
+    <name>username</name>
   </author>
   <updated>2008-04-29T19:31:00.545Z</updated>
   <entry>
-    <link href="/ws/customers/joesflowers/activities/a07e1ffaxjxffmvj6qd" rel="edit" />
-    <id>http://api.constantcontact.com/ws/customers/joesflowers/activities/a07e1ffaxjxffmvj6qd</id>
+    <link href="/ws/customers/username/activities/a07e1ffaxjxffmvj6qd" rel="edit" />
+    <id>http://api.constantcontact.com/ws/customers/username/activities/a07e1ffaxjxffmvj6qd</id>
     <title type="text"></title>
     <updated>2008-04-29T19:30:15.637Z</updated>
     <content type="application/vnd.ctct+xml">
       <Activity xmlns="http://ws.constantcontact.com/ns/1.0/"
-        id="http://api.constantcontact.com/ws/customers/joesflowers/activities/a07e1ffaxjxffmvj6qd">
+        id="http://api.constantcontact.com/ws/customers/username/activities/a07e1ffaxjxffmvj6qd">
         <Type>ADD_CONTACT_DETAIL</Type>
         <Status>COMPLETE</Status>
         <Errors>
@@ -189,8 +194,8 @@ END_OF_XML
                 isa('Email::ConstantContact::Activity'),
                 noclass({
                     '_cc' => shallow($cc),
-                    'id' => 'http://api.constantcontact.com/ws/customers/joesflowers/activities/a07e1ffaxjxffmvj6qd',
-                    'link' => '/ws/customers/joesflowers/activities/a07e1ffaxjxffmvj6qd',
+                    'id' => 'http://api.constantcontact.com/ws/customers/username/activities/a07e1ffaxjxffmvj6qd',
+                    'link' => '/ws/customers/username/activities/a07e1ffaxjxffmvj6qd',
                     'Type' => 'ADD_CONTACT_DETAIL',
                     'Status' => 'COMPLETE',
                     'Error' => undef,

@@ -13,6 +13,11 @@ use Email::ConstantContact;
 ## Instantiate the class and confirm that the object was created as expected.
 ## Uses internal implementation details.
 {
+    # Set Data::Dumper format for diag statements below.
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+
     # Test data for instantiation.
     my $apikey = 'ABCDEFG1234567';
     my $username = 'me&company';
