@@ -115,12 +115,10 @@ sub test_smoke : Test(2) {
     local $Data::Dumper::Indent = 1;
     local $Data::Dumper::Useqq = 1;
 
-    # The following sample XML comes from the API docs.
-    my $activity_xml = <<'END_OF_XML';
+    my $feed_xml = <<'END_OF_XML';
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>http://api.constantcontact.com/ws/customers/username/contacts</id>
   <title type="text">Contacts</title>
-  <link href="" />
   <link href="" rel="self" />
   <author>
     <name>Constant Contact Web Services</name>
@@ -136,14 +134,6 @@ sub test_smoke : Test(2) {
       <Contact xmlns="http://ws.constantcontact.com/ns/1.0/"
           id="http://api.constantcontact.com/ws/customers/username/contacts/1">
         <Name>John Doe</Name>
-        <FirstName>John</FirstName>
-        <LastName>Doe</LastName>
-        <CompanyName>Acme Corp</CompanyName>
-        <WorkPhone>555-555-1234</WorkPhone>
-        <Addr1>123 Any St</Addr1>
-        <StateCode>MA</StateCode>
-        <StateName>Massachusetts</StateName>
-	    <PostalCode>01234</PostalCode>
         <EmailAddress>jdoe@acme.company.com</EmailAddress>
       </Contact>
     </content>
@@ -156,13 +146,6 @@ sub test_smoke : Test(2) {
       <Contact xmlns="http://ws.constantcontact.com/ns/1.0/"
           id="http://api.constantcontact.com/ws/customers/username/contacts/2">
         <Name>Joe Schmoe</Name>
-        <FirstName>Joe</FirstName>
-        <LastName>Shmoe</LastName>
-        <WorkPhone>555-555-6789</WorkPhone>
-        <Addr1>88 Nowhere Rd</Addr1>
-        <StateCode>CA</StateCode>
-        <StateName>California</StateName>
-	    <PostalCode>98765</PostalCode>
         <EmailAddress>jschmoe@company.com</EmailAddress>
       </Contact>
     </content>
@@ -171,7 +154,7 @@ sub test_smoke : Test(2) {
 END_OF_XML
 
     # Set XML to be returned from mock HTTP request.
-    $test->{ua_response_content} = $activity_xml;
+    $test->{ua_response_content} = $feed_xml;
 
     # Instantiate CC object.
     my $cc = Email::ConstantContact->new('apikey', 'username', 'password');
@@ -206,14 +189,6 @@ END_OF_XML
                 noclass(superhashof({
                     _cc => shallow($cc),
                     Name => 'John Doe',
-                    FirstName => 'John',
-                    LastName => 'Doe',
-                    CompanyName => 'Acme Corp',
-                    WorkPhone => '555-555-1234',
-                    Addr1 => '123 Any St',
-                    StateCode => 'MA',
-                    StateName => 'Massachusetts',
-                    PostalCode => '01234',
                     EmailAddress => 'jdoe@acme.company.com',
                 })),
             ),
@@ -222,13 +197,6 @@ END_OF_XML
                 noclass(superhashof({
                     _cc => shallow($cc),
                     Name => 'Joe Schmoe',
-                    FirstName => 'Joe',
-                    LastName => 'Shmoe',
-                    WorkPhone => '555-555-6789',
-                    Addr1 => '88 Nowhere Rd',
-                    StateCode => 'CA',
-                    StateName => 'California',
-                    PostalCode => '98765',
                     EmailAddress => 'jschmoe@company.com',
                 })),
             ),
