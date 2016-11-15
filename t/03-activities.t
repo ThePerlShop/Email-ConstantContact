@@ -219,7 +219,7 @@ END_OF_XML
                 }),
             ),
         ],
-        "Email::ConstantContact::Activity object",
+        "Email::ConstantContact::Activity objects",
     ) or diag(Data::Dumper->Dump([\@activities], ['*activities']));
 }
 
