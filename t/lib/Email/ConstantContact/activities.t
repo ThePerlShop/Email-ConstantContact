@@ -2,11 +2,11 @@
 use strict;
 use warnings;
 
-t::activities->runtests;
+t::lib::Email::ConstantContact::activities->runtests;
 
 
 BEGIN {
-package t::activities;
+package t::lib::Email::ConstantContact::activities;
 use strict;
 use warnings;
 
@@ -26,15 +26,15 @@ use Email::ConstantContact;
 
 =head1 NAME
 
-t::activities - Unit test the C<< Email::ConstantContact->activities() >> method.
+t::lib::Email::ConstantContact::activities - Unit test the C<< Email::ConstantContact->activities() >> method.
 
 =head1 SYNOPSIS
 
     # run all tests  
-    prove -lv t/02-activities.t
+    prove -lv t/lib/Email/ConstantContact/activities.t
 
     # run single test method
-    TEST_METHOD=test_METHOD_NAME prove -lv t/02-activities.t
+    TEST_METHOD=test_METHOD_NAME prove -lv t/lib/Email/ConstantContact/activities.t
 
 =cut
 
