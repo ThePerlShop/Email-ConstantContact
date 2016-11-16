@@ -62,41 +62,11 @@ t::lib::Email::ConstantContact::getActivity - Unit test the C<< Email::ConstantC
 }
 
 
-## Startup/shutdown/setup/teardown methods
+## Private functions/methods
 
-# Setup mock overrides for module functions.
-sub _mock_modules : Test(setup) {
-    my $test = shift;
-
-    $test->{ua_module} = t::lib::Email::ConstantContact::MockUserAgent->new();
-}
-
-# Cleanup mock overrides.
-sub _unmock_modules : Test(teardown) {
-    my $test = shift;
-
-    delete $test->{ua_module};
-}
-
-
-## Tests
-
-=head1 TESTS
-
-=head2 test_smoke
-
-=cut
-
-sub test_smoke : Test(2) {
-    my $test = shift;
-
-    # Set Data::Dumper format for diag statements below.
-    local $Data::Dumper::Sortkeys = 1;
-    local $Data::Dumper::Indent = 1;
-    local $Data::Dumper::Useqq = 1;
-
-    # The following sample XML comes from the API docs.
-    my $entry_xml = <<'END_OF_XML';
+# Return XML for an activity.
+sub _activity_xml {
+    return <<'END_OF_XML';
 <entry xmlns="http://www.w3.org/2005/Atom">
   <id>http://api.constantcontact.com/ws/customers/username/activities/activityname</id>
   <title type="text"></title>
@@ -138,9 +108,122 @@ sub test_smoke : Test(2) {
   </source>
 </entry>
 END_OF_XML
+}
+
+# Return a Test::Deep comparator tree for the activity above.
+sub _activity_cmp {
+    my ($cc) = @_;
+    return all(
+        isa('Email::ConstantContact::Activity'),
+        noclass({
+            '_cc' => shallow($cc),
+            'id' => 'http://api.constantcontact.com/ws/customers/username/activities/activityname',
+            'Type' => 'ADD_CONTACT_DETAIL',
+            'Status' => 'COMPLETE',
+            'Error' => undef,
+            'Errors' => [
+                {
+                    'LineNumber' => '3',
+                    'EmailAddress' => 'test2@test.com',
+                    'Message' => 'Unknown US/Canadian state/prov "Test2"'
+                },
+                {
+                    'EmailAddress' => 'test3@test.com',
+                    'Message' => 'Unknown US/Canadian state/prov "Test3"',
+                    'LineNumber' => '4'
+                }
+            ],
+            'FileName' => undef,
+            'TransactionCount' => '1',
+            'RunStartTime' => '2008-04-29T19:36:08.894Z',
+            'RunFinishTime' => '2008-04-29T19:36:10.948Z',
+            'InsertTime' => '2008-04-29T19:35:54.923Z',
+        }),
+    );
+}
+
+
+## Startup/shutdown/setup/teardown methods
+
+# Setup mock overrides for module functions.
+sub _mock_modules : Test(setup) {
+    my $test = shift;
+
+    $test->{ua_module} = t::lib::Email::ConstantContact::MockUserAgent->new();
+    $test->{ua_module}->clear_requests();
+}
+
+# Cleanup mock overrides.
+sub _unmock_modules : Test(teardown) {
+    my $test = shift;
+
+    delete $test->{ua_module};
+}
+
+
+## Tests
+
+=head1 TESTS
+
+=head2 test_url
+
+Test calling getActivity($url).
+
+=cut
+
+sub test_url : Test(2) {
+    my $test = shift;
+
+    # Set Data::Dumper format for diag statements below.
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
 
     # Set XML to be returned from mock HTTP request.
-    $test->{ua_module}->response_content( $entry_xml );
+    $test->{ua_module}->response_content( _activity_xml );
+
+    # Instantiate CC object.
+    my $cc = Email::ConstantContact->new('apikey', 'username', 'password');
+
+    # Call code under test.
+    # (The code under test should lowercase capital letters convert http to https.)
+    my $activity = $cc->getActivity('http://API.ConstantContact.com/ws/customers/username/activities/activityname');
+
+    # Verify request made via mock UA.
+    my $requests = $test->{ua_module}->requests;
+    cmp_http_requests(
+        $requests,
+        [
+            'https://api.constantcontact.com/ws/customers/username/activities/activityname',
+        ],
+        "HTTP requests",
+    ) or diag(Data::Dumper->Dump([$requests], ['requests']));
+
+    # Verify activity object returned.
+    cmp_deeply(
+        $activity,
+        _activity_cmp($cc),
+        "Email::ConstantContact::Activity object",
+    ) or diag(Data::Dumper->Dump([$activity], ['activity']));
+}
+
+
+=head2 test_name
+
+Test calling getActivity($name).
+
+=cut
+
+sub test_name : Test(2) {
+    my $test = shift;
+
+    # Set Data::Dumper format for diag statements below.
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+
+    # Set XML to be returned from mock HTTP request.
+    $test->{ua_module}->response_content( _activity_xml );
 
     # Instantiate CC object.
     my $cc = Email::ConstantContact->new('apikey', 'username', 'password');
@@ -161,33 +244,7 @@ END_OF_XML
     # Verify activity object returned.
     cmp_deeply(
         $activity,
-        all(
-            isa('Email::ConstantContact::Activity'),
-            noclass({
-                '_cc' => shallow($cc),
-                'id' => 'http://api.constantcontact.com/ws/customers/username/activities/activityname',
-                'Type' => 'ADD_CONTACT_DETAIL',
-                'Status' => 'COMPLETE',
-                'Error' => undef,
-                'Errors' => [
-                    {
-                        'LineNumber' => '3',
-                        'EmailAddress' => 'test2@test.com',
-                        'Message' => 'Unknown US/Canadian state/prov "Test2"'
-                    },
-                    {
-                        'EmailAddress' => 'test3@test.com',
-                        'Message' => 'Unknown US/Canadian state/prov "Test3"',
-                        'LineNumber' => '4'
-                    }
-                ],
-                'FileName' => undef,
-                'TransactionCount' => '1',
-                'RunStartTime' => '2008-04-29T19:36:08.894Z',
-                'RunFinishTime' => '2008-04-29T19:36:10.948Z',
-                'InsertTime' => '2008-04-29T19:35:54.923Z',
-            }),
-        ),
+        _activity_cmp($cc),
         "Email::ConstantContact::Activity object",
     ) or diag(Data::Dumper->Dump([$activity], ['activity']));
 }
