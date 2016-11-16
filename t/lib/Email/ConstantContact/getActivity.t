@@ -16,8 +16,7 @@ use Test::Most;
 use Data::Dumper;
 
 
-use Test::MockObject;
-use Test::MockModule;
+use t::lib::Email::ConstantContact::MockUserAgent;
 
 
 # load code to be tested
@@ -68,34 +67,14 @@ t::lib::Email::ConstantContact::getActivity - Unit test the C<< Email::ConstantC
 sub _mock_modules : Test(setup) {
     my $test = shift;
 
-    # mock HTTP response content
-    $test->{ua_response_content} = ''; # override in test if desired
-
-    # where to save requests made of the user agent
-    $test->{ua_requests} = [];
-
-    # mock LWP::UserAgent->request()
-    my $ua = $test->{ua} = Test::MockModule->new('LWP::UserAgent');
-    $ua->mock( request => sub {
-        my $self = shift;
-        my ($request) = @_;
-        push @{$test->{ua_requests}}, $request;
-
-        # mock HTTP response
-        my $response = Test::MockObject->new();
-        $response->set_always( code => 200 );
-        $response->set_always( content => $test->{ua_response_content} );
-        return $response;
-    } );
+    $test->{ua_module} = t::lib::Email::ConstantContact::MockUserAgent->new();
 }
 
 # Cleanup mock overrides.
 sub _unmock_modules : Test(teardown) {
     my $test = shift;
 
-    delete $test->{ua};
-    delete $test->{ua_requests};
-    delete $test->{ua_response_content};
+    delete $test->{ua_module};
 }
 
 
@@ -116,7 +95,7 @@ sub test_smoke : Test(2) {
     local $Data::Dumper::Useqq = 1;
 
     # The following sample XML comes from the API docs.
-    my $activity_xml = <<'END_OF_XML';
+    my $entry_xml = <<'END_OF_XML';
 <entry xmlns="http://www.w3.org/2005/Atom">
   <id>http://api.constantcontact.com/ws/customers/username/activities/activityname</id>
   <title type="text"></title>
@@ -160,7 +139,7 @@ sub test_smoke : Test(2) {
 END_OF_XML
 
     # Set XML to be returned from mock HTTP request.
-    $test->{ua_response_content} = $activity_xml;
+    $test->{ua_module}->response_content( $entry_xml );
 
     # Instantiate CC object.
     my $cc = Email::ConstantContact->new('apikey', 'username', 'password');
@@ -169,8 +148,9 @@ END_OF_XML
     my $activity = $cc->getActivity('activityname');
 
     # Verify request made via mock UA.
+    my $requests = $test->{ua_module}->requests;
     cmp_deeply(
-        $test->{ua_requests},
+        $requests,
         [
             all(
                 isa('HTTP::Request'),
@@ -183,8 +163,8 @@ END_OF_XML
                 ),
             ),
         ],
-        "HTTP request",
-    ) or diag(Data::Dumper->Dump([$test->{ua_requests}], ['requests']));;
+        "HTTP requests",
+    ) or diag(Data::Dumper->Dump([$requests], ['requests']));
 
     # Verify activity object returned.
     cmp_deeply(

@@ -16,8 +16,7 @@ use Test::Most;
 use Data::Dumper;
 
 
-use Test::MockObject;
-use Test::MockModule;
+use t::lib::Email::ConstantContact::MockUserAgent;
 
 
 # load code to be tested
@@ -68,35 +67,14 @@ t::lib::Email::ConstantContact::lists - Unit test the C<< Email::ConstantContact
 sub _mock_modules : Test(setup) {
     my $test = shift;
 
-    # mock HTTP response content
-    $test->{ua_response_content} = []; # override in test if desired
-
-    # where to save requests made of the user agent
-    $test->{ua_requests} = [];
-
-    # mock LWP::UserAgent->request()
-    my $ua = $test->{ua} = Test::MockModule->new('LWP::UserAgent');
-    $ua->mock( request => sub {
-        my $self = shift;
-        my ($request) = @_;
-        push @{$test->{ua_requests}}, $request;
-
-        # mock HTTP response
-        my $content = shift @{$test->{ua_response_content}} || '';
-        my $response = Test::MockObject->new();
-        $response->set_always( code => $content ? 200 : 404 );
-        $response->set_always( content => $content );
-        return $response;
-    } );
+    $test->{ua_module} = t::lib::Email::ConstantContact::MockUserAgent->new();
 }
 
 # Cleanup mock overrides.
 sub _unmock_modules : Test(teardown) {
     my $test = shift;
 
-    delete $test->{ua};
-    delete $test->{ua_requests};
-    delete $test->{ua_response_content};
+    delete $test->{ua_module};
 }
 
 
@@ -203,7 +181,7 @@ END_OF_XML
 END_OF_XML
 
     # Set XML to be returned from mock HTTP request.
-    $test->{ua_response_content} = [$list1_xml, $list2_xml];
+    $test->{ua_module}->response_content( $list1_xml, $list2_xml );
 
     # Instantiate CC object.
     my $cc = Email::ConstantContact->new('apikey', 'username', 'password');
@@ -211,6 +189,7 @@ END_OF_XML
     # Call code under test.
     my @lists = $cc->lists;
 
+    # Function returning a comparator tree for an HTTP GET request for a given URI.
     my $http_request_cmp = sub {
         my $uri = shift;
         return all(
@@ -226,14 +205,15 @@ END_OF_XML
     };
 
     # Verify request made via mock UA.
+    my $requests = $test->{ua_module}->requests;
     cmp_deeply(
-        $test->{ua_requests},
+        $requests,
         [
             $http_request_cmp->('https://api.constantcontact.com/ws/customers/username/lists'),
             $http_request_cmp->('https://api.constantcontact.com/ws/customers/username/lists?next=6'),
         ],
-        "HTTP request",
-    ) or diag(Data::Dumper->Dump([$test->{ua_requests}], ['requests']));
+        "HTTP requests",
+    ) or diag(Data::Dumper->Dump([$requests], ['requests']));
 
     # Verify activity object returned.
     cmp_deeply(
