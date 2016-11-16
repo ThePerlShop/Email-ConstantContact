@@ -17,6 +17,7 @@ use Data::Dumper;
 
 
 use t::lib::Email::ConstantContact::MockUserAgent;
+use t::lib::Email::ConstantContact::TestHttpRequest qw(cmp_http_requests);
 
 
 # load code to be tested
@@ -119,21 +120,6 @@ sub _contact_cmp {
     );
 }
 
-# Function: return a Test::Deep comparator tree for an HTTP GET request for a given URI.
-sub _http_request_cmp {
-    my $uri = shift;
-    return all(
-        isa('HTTP::Request'),
-        methods(
-            method => 'GET',
-            uri => methods(
-                as_string => $uri,
-            ),
-            [ header => 'authorization' ] => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
-        ),
-    );
-};
-
 
 ## Startup/shutdown/setup/teardown methods
 
@@ -183,10 +169,10 @@ sub test_url : Test(2) {
 
     # Verify request made via mock UA.
     my $requests = $test->{ua_module}->requests;
-    cmp_deeply(
+    cmp_http_requests(
         $requests,
         [
-            _http_request_cmp('https://api.constantcontact.com/ws/customers/username/contacts/1'),
+            'https://api.constantcontact.com/ws/customers/username/contacts/1',
         ],
         "HTTP requests",
     ) or diag(Data::Dumper->Dump([$requests], ['requests']));
@@ -253,11 +239,11 @@ END_OF_XML
 
     # Verify request made via mock UA.
     my $requests = $test->{ua_module}->requests;
-    cmp_deeply(
+    cmp_http_requests(
         $requests,
         [
-            _http_request_cmp('https://api.constantcontact.com/ws/customers/username/contacts?email=jdoe%40acme.company.com'),
-            _http_request_cmp('https://api.constantcontact.com/ws/customers/username/contacts/1'),
+            'https://api.constantcontact.com/ws/customers/username/contacts?email=jdoe%40acme.company.com',
+            'https://api.constantcontact.com/ws/customers/username/contacts/1',
         ],
         "HTTP requests",
     ) or diag(Data::Dumper->Dump([$requests], ['requests']));
@@ -297,10 +283,10 @@ sub test_number : Test(2) {
 
     # Verify request made via mock UA.
     my $requests = $test->{ua_module}->requests;
-    cmp_deeply(
+    cmp_http_requests(
         $requests,
         [
-            _http_request_cmp('https://api.constantcontact.com/ws/customers/username/contacts/1'),
+            'https://api.constantcontact.com/ws/customers/username/contacts/1',
         ],
         "HTTP requests",
     ) or diag(Data::Dumper->Dump([$requests], ['requests']));

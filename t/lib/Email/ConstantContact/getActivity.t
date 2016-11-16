@@ -17,6 +17,7 @@ use Data::Dumper;
 
 
 use t::lib::Email::ConstantContact::MockUserAgent;
+use t::lib::Email::ConstantContact::TestHttpRequest qw(cmp_http_requests);
 
 
 # load code to be tested
@@ -149,19 +150,10 @@ END_OF_XML
 
     # Verify request made via mock UA.
     my $requests = $test->{ua_module}->requests;
-    cmp_deeply(
+    cmp_http_requests(
         $requests,
         [
-            all(
-                isa('HTTP::Request'),
-                methods(
-                    method => 'GET',
-                    uri => methods(
-                        as_string => 'https://api.constantcontact.com/ws/customers/username/activities/activityname',
-                    ),
-                    [ header => 'authorization' ] => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
-                ),
-            ),
+            'https://api.constantcontact.com/ws/customers/username/activities/activityname',
         ],
         "HTTP requests",
     ) or diag(Data::Dumper->Dump([$requests], ['requests']));

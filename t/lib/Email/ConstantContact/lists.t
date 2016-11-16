@@ -17,6 +17,7 @@ use Data::Dumper;
 
 
 use t::lib::Email::ConstantContact::MockUserAgent;
+use t::lib::Email::ConstantContact::TestHttpRequest qw(cmp_http_requests);
 
 
 # load code to be tested
@@ -189,28 +190,13 @@ END_OF_XML
     # Call code under test.
     my @lists = $cc->lists;
 
-    # Function returning a comparator tree for an HTTP GET request for a given URI.
-    my $http_request_cmp = sub {
-        my $uri = shift;
-        return all(
-            isa('HTTP::Request'),
-            methods(
-                method => 'GET',
-                uri => methods(
-                    as_string => $uri,
-                ),
-                [ header => 'authorization' ] => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
-            ),
-        );
-    };
-
     # Verify request made via mock UA.
     my $requests = $test->{ua_module}->requests;
-    cmp_deeply(
+    cmp_http_requests(
         $requests,
         [
-            $http_request_cmp->('https://api.constantcontact.com/ws/customers/username/lists'),
-            $http_request_cmp->('https://api.constantcontact.com/ws/customers/username/lists?next=6'),
+            'https://api.constantcontact.com/ws/customers/username/lists',
+            'https://api.constantcontact.com/ws/customers/username/lists?next=6',
         ],
         "HTTP requests",
     ) or diag(Data::Dumper->Dump([$requests], ['requests']));
