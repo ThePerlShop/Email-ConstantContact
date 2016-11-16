@@ -22,6 +22,9 @@ C<Email::ConstantContact> methods.
     # Each call to request() will return one response.
     $ua_module->response_content($content1, $content2, $content3);
 
+    # Clear record of calls to request() before code under test.
+    $ua_module->clear_requests();
+
     LWP::UserAgent->request($req); # usually in code under test
 
     # A list of HTTP::Request objects passed to request() one for each call.
@@ -71,6 +74,12 @@ sub response_content {
 sub requests {
     my $self = shift;
     return $self->{_ua}->{requests};
+}
+
+
+sub clear_requests {
+    my $self = shift;
+    $self->{_ua}->{requests} = [];
 }
 
 
