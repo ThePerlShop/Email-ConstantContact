@@ -69,6 +69,7 @@ sub _mock_modules : Test(setup) {
     my $test = shift;
 
     $test->{ua_module} = t::lib::Email::ConstantContact::MockUserAgent->new();
+    $test->{ua_module}->clear_requests();
 }
 
 # Cleanup mock overrides.
