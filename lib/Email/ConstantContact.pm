@@ -403,32 +403,8 @@ sub getList {
 sub resources {
 	my $self = shift;
 
-	my $url = lc($self->{rooturl} . "/");
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
-
-	my $ua = new LWP::UserAgent;
-	my $res = $ua->request($req);
-	my @resources;
-
-	if ($res->code == 200) {
-		my $xs = XML::Simple->new(SuppressEmpty => 'undef', KeyAttr => [], ForceArray => ['collection']);
-		my $xmlobj = $xs->XMLin($res->content);
-
-		if (defined($xmlobj->{'workspace'}->{'collection'}) && 
-			ref($xmlobj->{'workspace'}->{'collection'})) {
-
-			foreach my $subobj (@{$xmlobj->{'workspace'}->{'collection'}}) {
-				push (@resources, new Email::ConstantContact::Resource($self, $subobj));
-			}
-		}
-		return @resources;
-	}
-	else {
-		carp "Service Document request returned code " . $res->status_line;
-		return wantarray? (): undef;
-	}
-
+	carp "The 'resources' feature is no longer supported in the Constant Contact v1 (XML) API";
+	return wantarray? (): undef;
 }
 
 sub campaigns {
