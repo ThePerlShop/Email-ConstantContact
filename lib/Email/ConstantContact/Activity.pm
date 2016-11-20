@@ -81,7 +81,7 @@ sub new {
 
 	if (exists($data->{'content'}->{'Activity'}->{'Errors'}) 
 		&& ref($data->{'content'}->{'Activity'}->{'Errors'})) {
-		$self->Errors = $data->{'content'}->{'Activity'}->{'Errors'};
+		$self->{'Errors'} = $data->{'content'}->{'Activity'}->{'Errors'};
 	}
 
 	bless ($self, $class);
