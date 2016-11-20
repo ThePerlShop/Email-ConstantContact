@@ -27,7 +27,7 @@ WriteMakefile(
         'Test::MockObject' => 0,
         'Test::MockModule' => 0,
     },
-    RECURSIVE_TEST_FILES => 1,
+    test => { RECURSIVE_TEST_FILES => 1 },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Email-ConstantContact-*' },
 );
