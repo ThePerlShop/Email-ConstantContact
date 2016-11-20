@@ -4,7 +4,7 @@ use warnings;
 
 use parent 'Exporter';
 
-our @EXPORT = qw(cmp_http_requests);
+our @EXPORT = qw(cmp_http_request cmp_http_requests);
 
 
 use Test::Deep;
@@ -19,6 +19,22 @@ C<HTTP::Request> objects used by C<Email::ConstantContact> unit tests.
 
     use t::lib::Email::ConstantContact::TestHttpRequest;
 
+    cmp_http_request(
+        $request,
+        'http://company.com/request/1',
+        'description of test',
+    );
+
+    cmp_http_request(
+        $request,
+        {
+            authorization => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
+            url => 'http://company.com/request/1',
+        },
+        'description of test',
+    );
+
+
     cmp_http_requests(
         $requests,
         [
@@ -28,12 +44,25 @@ C<HTTP::Request> objects used by C<Email::ConstantContact> unit tests.
         'description of test',
     );
 
+    cmp_http_requests(
+        $requests,
+        {
+            authorization => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
+            urls => [
+                'http://company.com/request/1',
+                'http://company.com/request/2',
+            ],
+        },
+        'description of test',
+    );
+
 =cut
 
 
-# Function: return a Test::Deep comparator tree for an HTTP GET request for a given URI.
+# Return a Test::Deep comparator tree for an HTTP GET request for a given URI.
 sub _http_request_cmp {
-    my $uri = shift;
+    my ($authorization, $uri) = @_;
+
     return all(
         isa('HTTP::Request'),
         methods(
@@ -41,10 +70,33 @@ sub _http_request_cmp {
             uri => methods(
                 as_string => $uri,
             ),
-            [ header => 'authorization' ] => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
+            [ header => 'authorization' ] => $authorization,
         ),
     );
 };
+
+
+sub cmp_http_request {
+    my ($got, $expected, $description) = @_;
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    # Rewrite $expected to standard form if only a URL is passed in.
+    $expected = {
+        url => $expected,
+    } unless ref $expected;
+
+    my $authorization = $expected->{authorization}
+        // 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk';
+
+    my $expected_request = _http_request_cmp($authorization, $expected->{url});
+
+    cmp_deeply(
+        $got,
+        $expected_request,
+        $description,
+    );
+}
 
 
 sub cmp_http_requests {
@@ -52,15 +104,21 @@ sub cmp_http_requests {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    $expected = [ map {
-        # if a reference, then assume a fully-formed comparator
-        # if a scalar, then assume it's a URI
-        ref $_ ? $_ : _http_request_cmp($_)
-    } @$expected ] if ref $expected eq 'ARRAY';
+    # Rewrite $expected to standard form if only an array of URLs is passed in.
+    $expected = {
+        urls => $expected,
+    } if ref $expected eq 'ARRAY';
+
+    my $authorization = $expected->{authorization}
+        // 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk';
+
+    my $expected_requests = [ map {
+        _http_request_cmp($authorization, $_)
+    } @{ $expected->{urls} } ];
 
     cmp_deeply(
         $got,
-        $expected,
+        $expected_requests,
         $description,
     );
 }
