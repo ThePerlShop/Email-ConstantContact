@@ -118,7 +118,7 @@ sub new {
 	my $class = shift;
 	my %args =
 		(@_ % 2) # odd number of parameters
-		? (apikey => @_[0], username => @_[1], password => @_[2])
+		? (apikey => $_[0], username => $_[1], password => $_[2])
 		: @_;
 
 	my $self = {};
