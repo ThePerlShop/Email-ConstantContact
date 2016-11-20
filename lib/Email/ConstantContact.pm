@@ -116,11 +116,17 @@ ConstantContact username and password to interact with the service.
 
 sub new {
 	my $class = shift;
-	my $self  = {
-		apikey		=> shift,
-		username	=> shift,
-		password	=> shift,
-	};
+	my %args =
+		(@_ % 2) # odd number of parameters
+		? (apikey => @_[0], username => @_[1], password => @_[2])
+		: @_;
+
+	my $self = {};
+	if (exists $args{password}) { # username-password authorization
+		$self = { map { $_ => $args{$_} } qw( apikey username password ) };
+	} elsif (exists $args{access_token}) { # access-token authorization
+		$self = { map { $_ => $args{$_} } qw( username access_token ) }
+	}
 
 	bless ($self, $class);
 
