@@ -122,10 +122,10 @@ sub new {
 		: @_;
 
 	my $self = {};
-	if (exists $args{password}) { # username-password authorization
-		$self = { map { $_ => $args{$_} } qw( apikey username password ) };
-	} elsif (exists $args{access_token}) { # access-token authorization
+	if (exists $args{access_token}) { # access-token authorization
 		$self = { map { $_ => $args{$_} } qw( username access_token ) }
+	} elsif (exists $args{password}) { # username-password authorization
+		$self = { map { $_ => $args{$_} } qw( apikey username password ) };
 	}
 
 	bless ($self, $class);
@@ -135,6 +135,26 @@ sub new {
 
 	return $self;
 }
+
+
+sub _new_request {
+	my $self = shift;
+	my $url = shift;
+
+	$url = lc($url);
+	$url =~ s/^http:/https:/;
+
+	my $req = GET($url);
+
+	if (exists $self->{access_token}) { # access-token authorization
+		$req->authorization('Bearer ' . $self->{access_token});
+	} elsif (exists $self->{password}) { # username-password authorization
+		$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	}
+
+	return $req;
+}
+
 
 sub getActivity {
 	my $self = shift;
