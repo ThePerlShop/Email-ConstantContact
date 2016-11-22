@@ -9,7 +9,7 @@ use Email::ConstantContact::List;
 use Email::ConstantContact::Contact;
 use Email::ConstantContact::Activity;
 use Email::ConstantContact::Campaign;
-use HTTP::Request::Common qw(POST GET);
+use HTTP::Request;
 use URI::Escape;
 use XML::Simple;
 
@@ -137,6 +137,29 @@ sub new {
 }
 
 
+# Returns the request method.
+sub _request_method {
+	my $self = shift;
+
+	return 'GET';
+}
+
+# Returns the request authorization header.
+sub _request_authorization {
+	my $self = shift;
+
+	if (exists $self->{access_token}) { # access-token authorization
+		return 'Bearer ' . $self->{access_token};
+	} elsif (exists $self->{password}) { # username-password authorization
+		my $username_password = $self->{apikey} . '%' . $self->{username} . ':' . $self->{password};
+		require MIME::Base64;
+		return 'Basic ' . MIME::Base64::encode($username_password, '');
+	} else {
+		return undef;
+	}
+}
+
+# Instantiates a new request.
 sub _new_request {
 	my $self = shift;
 	my $url = shift;
@@ -144,13 +167,10 @@ sub _new_request {
 	$url = lc($url);
 	$url =~ s/^http:/https:/;
 
-	my $req = GET($url);
+	my $req = HTTP::Request->new($self->_request_method => $url);
 
-	if (exists $self->{access_token}) { # access-token authorization
-		$req->authorization('Bearer ' . $self->{access_token});
-	} elsif (exists $self->{password}) { # username-password authorization
-		$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
-	}
+	my $authorization = $self->_request_authorization;
+	$req->authorization($authorization) if defined $authorization;
 
 	return $req;
 }
