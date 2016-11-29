@@ -9,7 +9,7 @@ use Email::ConstantContact::List;
 use Email::ConstantContact::Contact;
 use Email::ConstantContact::Activity;
 use Email::ConstantContact::Campaign;
-use HTTP::Request::Common qw(POST GET);
+use HTTP::Request;
 use URI::Escape;
 use XML::Simple;
 
@@ -137,6 +137,29 @@ sub new {
 }
 
 
+# Returns the request method.
+sub _request_method {
+	my $self = shift;
+
+	return 'GET';
+}
+
+# Returns the request authorization header.
+sub _request_authorization {
+	my $self = shift;
+
+	if (exists $self->{access_token}) { # access-token authorization
+		return 'Bearer ' . $self->{access_token};
+	} elsif (exists $self->{password}) { # username-password authorization
+		my $username_password = $self->{apikey} . '%' . $self->{username} . ':' . $self->{password};
+		require MIME::Base64;
+		return 'Basic ' . MIME::Base64::encode($username_password, '');
+	} else {
+		return undef;
+	}
+}
+
+# Instantiates a new request.
 sub _new_request {
 	my $self = shift;
 	my $url = shift;
@@ -144,13 +167,10 @@ sub _new_request {
 	$url = lc($url);
 	$url =~ s/^http:/https:/;
 
-	my $req = GET($url);
+	my $req = HTTP::Request->new($self->_request_method => $url);
 
-	if (exists $self->{access_token}) { # access-token authorization
-		$req->authorization('Bearer ' . $self->{access_token});
-	} elsif (exists $self->{password}) { # username-password authorization
-		$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
-	}
+	my $authorization = $self->_request_authorization;
+	$req->authorization($authorization) if defined $authorization;
 
 	return $req;
 }
@@ -171,8 +191,7 @@ sub getActivity {
 		$url = lc($self->{rooturl} . '/activities/' . $activityname);
 	}
 
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -194,8 +213,7 @@ sub activities {
 	my $self = shift;
 
 	my $url = lc($self->{rooturl} . '/activities');
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -244,8 +262,7 @@ sub lists {
 	my @lists;
 
 	while (my $url = shift(@URLS)) {
-		my $req = GET($url);
-		$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+		my $req = $self->_new_request($url);
 		my $res = $ua->request($req);
 
 		if ($res->code == 200) {
@@ -304,8 +321,7 @@ sub contacts {
 	my $self = shift;
 
 	my $url = lc($self->{rooturl} . '/contacts');
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -344,8 +360,7 @@ sub getContact {
 	elsif ($contactname =~ /@/) {
 		#they passed in an email address, we must query for it.
 		my $url1 = lc($self->{rooturl} . '/contacts?email=' . uri_escape($contactname));
-		my $req1 = GET($url1);
-		$req1->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+		my $req1 = $self->_new_request($url1);
 		my $res1 = $ua->request($req1);
 
 		unless ($res1->code == 200) {
@@ -375,8 +390,7 @@ sub getContact {
 		$url = lc($self->{rooturl} . '/contacts/' . $contactname);
 	}
 
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $res = $ua->request($req);
 
@@ -408,8 +422,7 @@ sub getList {
 		$url = lc($self->{rooturl} . '/lists/' . $listname);
 	}
 
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -438,8 +451,7 @@ sub campaigns {
 	my $status = shift;
 
 	my $url = lc($self->{rooturl} . '/campaigns' . ($status ? ('?status=' . $status) : ''));
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -477,8 +489,7 @@ sub getCampaign {
 		$url = lc($self->{rooturl} . '/campaigns/' . $campaignname);
 	}
 
-	my $req = GET($url);
-	$req->authorization_basic($self->{apikey} . '%' . $self->{username}, $self->{password});
+	my $req = $self->_new_request($url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
