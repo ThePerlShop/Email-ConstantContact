@@ -15,16 +15,19 @@ WriteMakefile(
     PREREQ_PM => {
 		'XML::Writer' => 0,
 		'XML::Simple' => 0,
-        'Test::Most' => 0,
-        'Test::Class' => 0,
-        'Test::MockObject' => 0,
-        'Test::MockModule' => 0,
 		'LWP::UserAgent' => 0,
 		'Carp' => 0,
 		'HTTP::Request' => 0,
 		'POSIX' => 0,
 		'URI::Escape' => 0,
     },
+    TEST_REQUIRES => {
+        'Test::Most' => 0,
+        'Test::Class' => 0,
+        'Test::MockObject' => 0,
+        'Test::MockModule' => 0,
+    },
+    test => { RECURSIVE_TEST_FILES => 1 },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Email-ConstantContact-*' },
 );
