@@ -43,6 +43,7 @@ sub new {
     # private data used by this module
     $self->{_ua} //= {
         response_content => [],
+        response_code => [],
         requests => [],
     };
 
@@ -54,8 +55,9 @@ sub new {
 
         # mock HTTP response
         my $content = shift @{$self->{_ua}->{response_content}} || '';
+        my $code = shift @{$self->{_ua}->{response_code}} || ( $content ? 200 : 404 );
         my $response = Test::MockObject->new();
-        $response->set_always( code => $content ? 200 : 404 );
+        $response->set_always( code => $code );
         $response->set_always( content => $content );
         return $response;
     } );
@@ -68,6 +70,13 @@ sub response_content {
     my $self = shift;
     $self->{_ua}->{response_content} = [ @_ ] if @_;
     return $self->{_ua}->{response_content};
+}
+
+
+sub response_code {
+    my $self = shift;
+    $self->{_ua}->{response_code} = [ @_ ] if @_;
+    return $self->{_ua}->{response_code};
 }
 
 
