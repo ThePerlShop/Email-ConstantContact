@@ -171,17 +171,12 @@ sub test_smoke : Test(3) {
                         type => 'application/vnd.ctct+xml',
                         Contact => {
                             xmlns => 'http://ws.constantcontact.com/ns/1.0/',
-                            id => [ ('http://api.constantcontact.com/ws/customers/username/contacts/1') x 2 ],
-                            EmailAddress => 'jdoe@acme.company.com',
-                            Name => 'John Doe',
-                            FirstName => 'John',
-                            LastName => 'Doe',
-                            CompanyName => 'Acme Corp',
-                            WorkPhone => '555-555-1234',
-                            Addr1 => '123 Any St',
-                            StateCode => 'MA',
-                            StateName => 'Massachusetts',
-                            PostalCode => '01234',
+                            id => [ ( $contact_data{id} ) x 2 ],
+                            ( map { $_ => $contact_data{$_} } qw(
+                                EmailAddress Name
+                                FirstName LastName CompanyName WorkPhone
+                                Addr1 StateCode StateName PostalCode
+                            ) ),
                             OptInSource => 'ACTION_BY_CUSTOMER',
                             ContactLists => {},
                         },

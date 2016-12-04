@@ -203,8 +203,8 @@ sub test_smoke : Test(3) {
                         type => 'application/vnd.ctct+xml',
                         Campaign => superhashof({
                             xmlns => 'http://ws.constantcontact.com/ns/1.0/',
-                            id => [ ('http://api.constantcontact.com/ws/customers/username/campaigns/1') x 2 ],
-                            map { $_ => $campaign_data{$_} } qw(
+                            id => [ ( $campaign_data{id} ) x 2 ],
+                            ( map { $_ => $campaign_data{$_} } qw(
                                 Name Status Date Subject FromName ViewAsWebpage PermissionReminder
                                 GreetingSalutation GreetingName GreetingString
                                 OrganizationName OrganizationAddress1 OrganizationCity OrganizationState
@@ -212,7 +212,7 @@ sub test_smoke : Test(3) {
                                 IncludeForwardEmail IncludeSubscribeLink
                                 EmailContentFormat EmailContent EmailTextContent
                                 FromEmail ReplyToEmail
-                            ),
+                            ) ),
                         }),
                     },
                 }),
