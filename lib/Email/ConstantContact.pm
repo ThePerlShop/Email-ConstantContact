@@ -137,13 +137,6 @@ sub new {
 }
 
 
-# Returns the request method.
-sub _request_method {
-	my $self = shift;
-
-	return 'GET';
-}
-
 # Returns the request authorization header.
 sub _request_authorization {
 	my $self = shift;
@@ -162,12 +155,12 @@ sub _request_authorization {
 # Instantiates a new request.
 sub _new_request {
 	my $self = shift;
-	my $url = shift;
+	my ($method => $url) = @_;
 
 	$url = lc($url);
 	$url =~ s/^http:/https:/;
 
-	my $req = HTTP::Request->new($self->_request_method => $url);
+	my $req = HTTP::Request->new($method => $url);
 
 	my $authorization = $self->_request_authorization;
 	$req->authorization($authorization) if defined $authorization;
@@ -191,7 +184,7 @@ sub getActivity {
 		$url = lc($self->{rooturl} . '/activities/' . $activityname);
 	}
 
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -213,7 +206,7 @@ sub activities {
 	my $self = shift;
 
 	my $url = lc($self->{rooturl} . '/activities');
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -262,7 +255,7 @@ sub lists {
 	my @lists;
 
 	while (my $url = shift(@URLS)) {
-		my $req = $self->_new_request($url);
+		my $req = $self->_new_request(GET => $url);
 		my $res = $ua->request($req);
 
 		if ($res->code == 200) {
@@ -321,7 +314,7 @@ sub contacts {
 	my $self = shift;
 
 	my $url = lc($self->{rooturl} . '/contacts');
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -360,7 +353,7 @@ sub getContact {
 	elsif ($contactname =~ /@/) {
 		#they passed in an email address, we must query for it.
 		my $url1 = lc($self->{rooturl} . '/contacts?email=' . uri_escape($contactname));
-		my $req1 = $self->_new_request($url1);
+		my $req1 = $self->_new_request(GET => $url1);
 		my $res1 = $ua->request($req1);
 
 		unless ($res1->code == 200) {
@@ -390,7 +383,7 @@ sub getContact {
 		$url = lc($self->{rooturl} . '/contacts/' . $contactname);
 	}
 
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $res = $ua->request($req);
 
@@ -422,7 +415,7 @@ sub getList {
 		$url = lc($self->{rooturl} . '/lists/' . $listname);
 	}
 
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -451,7 +444,7 @@ sub campaigns {
 	my $status = shift;
 
 	my $url = lc($self->{rooturl} . '/campaigns' . ($status ? ('?status=' . $status) : ''));
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);
@@ -489,7 +482,7 @@ sub getCampaign {
 		$url = lc($self->{rooturl} . '/campaigns/' . $campaignname);
 	}
 
-	my $req = $self->_new_request($url);
+	my $req = $self->_new_request(GET => $url);
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->request($req);

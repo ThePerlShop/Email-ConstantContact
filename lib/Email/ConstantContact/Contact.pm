@@ -4,7 +4,6 @@ use warnings;
 use strict;
 use Carp;
 use LWP::UserAgent;
-use HTTP::Request::Common qw(POST GET);
 use XML::Simple;
 use XML::Writer;
 use POSIX qw( strftime );
@@ -118,11 +117,8 @@ sub optOut {
 
 	my $ua = new LWP::UserAgent;
 	my $url = lc($self->{id});
-	$url =~ s/^http:/https:/;
 
-	my $req = new HTTP::Request('DELETE', $url);
-	$req->authorization_basic($self->{'_cc'}->{apikey} . '%' . $self->{'_cc'}->{username}, $self->{'_cc'}->{password});
-	$req->content_type('application/atom+xml');
+	my $req = $self->{'_cc'}->_new_request(DELETE => $url);
 
 	my $res = $ua->request($req);
 
@@ -171,10 +167,8 @@ sub save {
 
 	my $ua = new LWP::UserAgent;
 	my $url = lc($self->{'id'});
-	$url =~ s/^http:/https:/;
 
-	my $req = new HTTP::Request('PUT', $url);
-	$req->authorization_basic($self->{'_cc'}->{apikey} . '%' . $self->{'_cc'}->{username}, $self->{'_cc'}->{password});
+	my $req = $self->{'_cc'}->_new_request(PUT => $url);
 	$req->content_type('application/atom+xml');
 	$req->content($xmlcontent);
 
@@ -223,8 +217,7 @@ sub create {
 	my $ua = new LWP::UserAgent;
 	my $url = lc($self->{'_cc'}->{rooturl} . '/contacts');
 
-	my $req = new HTTP::Request('POST', $url);
-	$req->authorization_basic($self->{'_cc'}->{apikey} . '%' . $self->{'_cc'}->{username}, $self->{'_cc'}->{password});
+	my $req = $self->{'_cc'}->_new_request(POST => $url);
 	$req->content_type('application/atom+xml');
 	$req->content($xmlcontent);
 
