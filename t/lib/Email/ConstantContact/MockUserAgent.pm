@@ -58,7 +58,9 @@ sub new {
         my $code = shift @{$self->{_ua}->{response_code}} || ( $content ? 200 : 404 );
         my $response = Test::MockObject->new();
         $response->set_always( code => $code );
+        $response->set_always( status_line => "$code" );
         $response->set_always( content => $content );
+        $response->set_always( is_success => 1 );
         return $response;
     } );
 
