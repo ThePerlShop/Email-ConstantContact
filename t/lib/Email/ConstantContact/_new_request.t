@@ -87,7 +87,7 @@ sub test_password : Test(1) {
 
     # Call code under test.
     # (The code under test should lowercase capital letters convert http to https.)
-    my $request = $cc->_new_request('http://API.ConstantContact.com/ws/customers/username/area/id');
+    my $request = $cc->_new_request(GET => 'http://API.ConstantContact.com/ws/customers/username/area/id');
 
     # Validate request.
     cmp_http_request(
@@ -123,7 +123,7 @@ sub test_access_token : Test(1) {
 
     # Call code under test.
     # (The code under test should lowercase capital letters convert http to https.)
-    my $request = $cc->_new_request('http://API.ConstantContact.com/ws/customers/username/area/id');
+    my $request = $cc->_new_request(GET => 'http://API.ConstantContact.com/ws/customers/username/area/id');
 
     # Validate request.
     cmp_http_request(

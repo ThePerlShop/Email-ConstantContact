@@ -4,7 +4,6 @@ use warnings;
 use strict;
 use Carp;
 use LWP::UserAgent;
-use HTTP::Request::Common qw(POST GET);
 use XML::Simple;
 use XML::Writer;
 use POSIX qw( strftime );
