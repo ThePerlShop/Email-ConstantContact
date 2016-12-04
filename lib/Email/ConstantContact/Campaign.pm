@@ -196,7 +196,7 @@ sub events {
 
 	my $ua = new LWP::UserAgent;
 	my @URLS = (lc($cc->{cchome} . $self->{'link'} . '/events/' . $type));
-	my @contacts;
+	my @events;
 
 	while (my $url = shift(@URLS)) {
 		my $req = GET($url);
@@ -209,7 +209,7 @@ sub events {
 
 			if (defined($xmlobj->{'entry'}) && ref($xmlobj->{'entry'})) {
 				foreach my $subobj (@{$xmlobj->{'entry'}}) {
-					push (@contacts, new Email::ConstantContact::CampaignEvent($cc, $subobj));
+					push (@events, new Email::ConstantContact::CampaignEvent($cc, $subobj));
 				}
 				if (defined($xmlobj->{'link'}) && ref($xmlobj->{'link'})) {
 					foreach my $subobj (@{$xmlobj->{'link'}}) {
@@ -225,7 +225,7 @@ sub events {
 			return wantarray? (): undef;
 		}
 	}
-	return @contacts;
+	return @events;
 }
 
 
