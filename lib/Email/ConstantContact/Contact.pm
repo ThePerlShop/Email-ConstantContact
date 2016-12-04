@@ -146,7 +146,7 @@ sub save {
 		$writer->dataElement('title', $self->{'title'}, type => 'text');
 		$writer->dataElement('author', '');
 		$writer->dataElement('updated', strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()));
-		$writer->dataElement('summary', 'ContactList', type => 'text');
+		$writer->dataElement('summary', 'Contact', type => 'text');
 		$writer->startTag('content', 'type' => 'application/vnd.ctct+xml');
 			$writer->startTag('Contact', 'xmlns' => 'http://ws.constantcontact.com/ns/1.0/',
 				'id' => $self->{'id'});

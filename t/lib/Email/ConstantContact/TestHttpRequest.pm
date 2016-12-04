@@ -56,21 +56,41 @@ C<HTTP::Request> objects used by C<Email::ConstantContact> unit tests.
         'description of test',
     );
 
+    cmp_http_requests(
+        $requests,
+        [
+            {
+                method => 'POST',
+                authorization => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
+                url => 'http://company.com/request',
+                content => $content,
+            },
+            {
+                method => 'GET',
+                authorization => 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
+                url => 'http://company.com/request/1',
+            },
+        },
+        'description of test',
+    );
+
 =cut
 
 
 # Return a Test::Deep comparator tree for an HTTP GET request for a given URI.
 sub _http_request_cmp {
-    my ($authorization, $uri) = @_;
+    my ($expected) = @_;
 
     return all(
         isa('HTTP::Request'),
         methods(
-            method => 'GET',
+            method => $expected->{method} // 'GET',
             uri => methods(
-                as_string => $uri,
+                as_string => $expected->{url},
             ),
-            [ header => 'authorization' ] => $authorization,
+            [ header => 'authorization' ] =>
+                $expected->{authorization} // 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk',
+            ( content => $expected->{content} ) x!! defined $expected->{content},
         ),
     );
 };
@@ -81,15 +101,12 @@ sub cmp_http_request {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    # Rewrite $expected to standard form if only a URL is passed in.
+    # Rewrite $expected to hashref form if only a URL is passed in.
     $expected = {
         url => $expected,
     } unless ref $expected;
 
-    my $authorization = $expected->{authorization}
-        // 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk';
-
-    my $expected_request = _http_request_cmp($authorization, $expected->{url});
+    my $expected_request = _http_request_cmp($expected);
 
     cmp_deeply(
         $got,
@@ -104,17 +121,17 @@ sub cmp_http_requests {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    # Rewrite $expected to standard form if only an array of URLs is passed in.
-    $expected = {
-        urls => $expected,
-    } if ref $expected eq 'ARRAY';
+    # Rewrite $expected to arrayref form if a hashref is passed in.
+    if ( ref $expected eq 'HASH' ) {
+        my $expected_template = $expected;
+        my $urls = delete $expected_template->{urls};
+        $expected = [ map { %$expected_template, url => $_ } @$urls ];
+    }
 
-    my $authorization = $expected->{authorization}
-        // 'Basic YXBpa2V5JXVzZXJuYW1lOnBhc3N3b3Jk';
+    # Rewrite array elements to hashrefs if only a URL is passed in them.
+    $expected = [ map { ref $_ ? $_ : { url => $_ } } @$expected ];
 
-    my $expected_requests = [ map {
-        _http_request_cmp($authorization, $_)
-    } @{ $expected->{urls} } ];
+    my $expected_requests = [ map { _http_request_cmp($_) } @{ $expected } ];
 
     cmp_deeply(
         $got,

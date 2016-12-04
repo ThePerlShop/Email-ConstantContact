@@ -66,7 +66,7 @@ sub remove {
 	my $self = shift;
 
 	my $ua = new LWP::UserAgent;
-	my $url = lc($self->id);
+	my $url = lc($self->{id});
 	$url =~ s/^http:/https:/;
 
 	my $req = new HTTP::Request('DELETE', $url);
