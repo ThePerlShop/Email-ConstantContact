@@ -34,22 +34,46 @@ our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
-This module allows you to interact with the ConstantContact mass email 
-marketing service from perl, such as creating and mainting contacts and
-contact lists.
+This module allows you to interact with the Constant Contact mass email
+marketing service from Perl, such as creating and mainting contacts and
+contact lists, using the Constant Contact v1 (XML) API.
 
 Before using this module, you must register your application with the
-ConstantContact company, agree to their terms & conditions, and apply 
-for an API access key.  You will use this key, in combination with a
-ConstantContact username and password to interact with the service.
+ConstantContact company, agree to their terms & conditions, and apply
+for an API access key. You can use this key, in combination with a
+Constant Contact username and password to interact with the service;
+however, this means of authorization is deprecated, because it requires
+that your application store the user's password.
+
+This module supports OAuth 2.0 authorization. In order to use OAuth 2.0,
+your application needs to direct the user's browser to the Constant
+Contact authentication server, using your API key. The user then logs
+into Constant Contact's server, which redirects the browser back to the
+redirect URL associated with your API key, providing an access token
+unique to that user's access to your app. (This process is described in
+Constant Contact's OAuth 2.0 documentation.) Provide the user's username
+along with this access token to this class as an alternative to using
+the user's password.
 
     use Email::ConstantContact;
 
-    my $apikey = 'ABCDEFG1234567';
     my $username = 'mycompany';
-    my $password = 'topsecret';
 
-    my $cc = new Email::ConstantContact($apikey, $username, $password);
+    # Authorize using API key and password (DEPRECATED).
+    my $apikey = 'ABCDEFG1234567';
+    my $password = 'topsecret';
+    my $cc = Email::ConstantContact->new(
+        apikey => $apikey,
+        username => $username,
+        password => $password,
+    );
+
+    # Authorize using access token.
+    my $access_token = '2c536334-8efd-4b49-8988-76a79fab2a87';
+    my $cc = Email::ConstantContact->new(
+        username => $username,
+        access_token => $access_token,
+    );
 
     # How to enumerate existing Contact Lists:
     my @all_lists = $cc->lists();
