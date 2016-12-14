@@ -20,6 +20,8 @@ WriteMakefile(
 		'HTTP::Request' => 0,
 		'POSIX' => 0,
 		'URI::Escape' => 0,
+		'File::Spec' => 0,
+		'YAML' => 0,
     },
     TEST_REQUIRES => {
         'Test::Most' => 0,

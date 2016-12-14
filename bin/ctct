@@ -1,0 +1,220 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use v5.10;
+
+use Email::ConstantContact;
+use Data::Dumper;
+use File::Spec;
+use YAML ();
+
+=head1 NAME
+
+ctct - Interface with Constant Contact API.
+
+=head1 SYNOPSIS
+
+    ctct activities
+    ctct getActivity <activity-name>
+    ctct getActivity <activity-API-URL>
+
+    ctct lists
+    ctct getList <list-ID>
+    ctct getList <list-API-URL>
+
+    ctct contacts
+    ctct getContact <contact-ID>
+    ctct getContact <email-address>
+    ctct getContact <contact-API-URL>
+
+    ctct campaigns
+    ctct getCampaign <campaign-ID>
+    ctct getCampaign <campaign-API-URL>
+
+=head1 CONFIGURATION
+
+This command gets its configuration from the C<.ctctrc> file in the
+user's home directory. This file is in YAML format and contains
+C<name: value> pairs of configuration parameters, especially those
+used for authorization with the Constant Contact server.
+
+For example:
+
+    ---
+    username: mycompany
+    access_token: 00001111-2222-3333-4444-555566667777
+
+The following parameter names are recognized:
+
+=over
+
+=item username
+
+The ID of the user under whose account the operation is to be performed.
+
+=item access_token
+
+An OAuth 2.0 access token obtained by the user granting access to your app.
+(This is not needed if using username/password authentication.)
+
+=item apikey
+
+DEPRECATED - The API key of your app, used for username/password authentication.
+
+=item password
+
+DEPRECATED - The user's password, used for username/password authentication.
+
+=back
+
+=cut
+
+
+# Commands supported and references to their subs.
+my %commands = map { $_ => \&{$_} } qw(
+    activities getActivity
+    lists getList
+    contacts getContact
+    campaigns getCampaign
+);
+
+if (! @ARGV) {
+    die "$0: usage: ctct command [name [options]]\n";
+}
+
+# Get the command name off the command line.
+my $command = shift;
+
+if ( exists $commands{$command} ) {
+    # Set Data::Dumper format for Dump statements in commands.
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Useqq = 1;
+
+    $commands{$command}->();
+} else {
+    die "$0: command $command not recognized\n";
+}
+
+
+# Load config from .ctctrc.
+sub _load_config {
+    my ($config) = YAML::LoadFile( File::Spec->catfile($ENV{HOME}, '.ctctrc') );
+    return $config;
+}
+
+
+# Instantiate a new CC object with auth options from config.
+sub _new_cc {
+    state $cc_args = _load_config();
+
+    return Email::ConstantContact->new( %$cc_args );
+}
+
+
+
+=head1 COMMANDS
+
+=head2 activities
+
+=cut
+
+sub activities {
+    my $cc = _new_cc();
+    my @activities = $cc->activities;
+    print Data::Dumper->Dump([\@activities], ['*activities']);
+}
+
+
+=head2 getActivity <activity-name>
+
+=head2 getActivity <activity-API-URL>
+
+=cut
+
+sub getActivity {
+    my $cc = _new_cc();
+    my $activityname = shift;
+    my $activity = $cc->getActivity($activityname);
+    print Data::Dumper->Dump([$activity], ['activity']);
+}
+
+
+=head2 lists
+
+=cut
+
+sub lists {
+    my $cc = _new_cc();
+    my @lists = $cc->lists;
+    print Data::Dumper->Dump([\@lists], ['*lists']);
+}
+
+
+=head2 getList <list-ID>
+
+=head2 getList <list-API-URL>
+
+=cut
+
+sub getList {
+    my $cc = _new_cc();
+    my $listname = shift;
+    my $list = $cc->getList($listname);
+    print Data::Dumper->Dump([$list], ['list']);
+}
+
+
+=head2 contacts
+
+=cut
+
+sub contacts {
+    my $cc = _new_cc();
+    my @contacts = $cc->contacts;
+    print Data::Dumper->Dump([\@contacts], ['*contacts']);
+}
+
+
+=head2 getContact <contact-ID>
+
+=head2 getContact <email-address>
+
+=head2 getContact <contact-API-URL>
+
+=cut
+
+sub getContact {
+    my $cc = _new_cc();
+    my $contactname = shift;
+    my $contact = $cc->getContact($contactname);
+    print Data::Dumper->Dump([$contact], ['contact']);
+}
+
+
+=head2 campaigns
+
+=cut
+
+sub campaigns {
+    my $cc = _new_cc();
+    my @campaigns = $cc->campaigns;
+    print Data::Dumper->Dump([\@campaigns], ['*campaigns']);
+}
+
+
+=head2 getCampaign <campaign-ID>
+
+=head2 getCampaign <campaign-API-URL>
+
+=cut
+
+sub getCampaign {
+    my $cc = _new_cc();
+    my $campaignname = shift;
+    my $campaign = $cc->getCampaign($campaignname);
+    print Data::Dumper->Dump([$campaign], ['campaign']);
+}
+
+
+__END__
